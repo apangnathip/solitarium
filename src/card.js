@@ -1,6 +1,9 @@
 const CARD_WIDTH = 32;
 const CARD_HEIGHT = 48;
 const BOUNDS = { nw: { x: 6, y: 6 }, se: { x: 263, y: 243 } };
+const LAYER_BG = 1;
+const LAYER_MG = 2;
+const LAYER_FG = 3;
 
 /** @type {CardSystem} */
 let cardSystem;
@@ -11,8 +14,7 @@ class CardSystem {
     this.cols = 7;
     this.rows = 4;
     this.group = new Group();
-    this.group.physics = KINEMATIC;
-    this.cards = [];
+    this.cardObj = {};
   }
 
   async init() {
@@ -25,38 +27,116 @@ class CardSystem {
     const px = CARD_WIDTH / 2 + 5;
     const py = CARD_HEIGHT / 2 + 5;
     for (let i = 0; i < this.cols; i++) {
+      let stack = new this.group.Group();
       let x = map(i, 0, this.cols - 1, BOUNDS.nw.x + px, BOUNDS.se.x - px);
       for (let j = 0; j < this.rows; j++) {
         const y = BOUNDS.nw.y + py + 6 * j;
-        this.cards.push(new Card(this, x, y, j === this.rows - 1));
+        new CardObject(this, stack, x, y, j === this.rows - 1);
       }
+    }
+  }
+
+  /** @returns {CardObject} */
+  getObj(card) {
+    return this.cardObj[card.idNum];
+  }
+
+  update() {
+    for (const sprite of this.group) {
+      cardSystem.getObj(sprite).update();
     }
   }
 }
 
-class Card {
-  constructor(system, x, y, active = false) {
+class CardObject {
+  constructor(system, group, x, y, active = false) {
     this.width = CARD_WIDTH;
     this.height = CARD_HEIGHT;
     this.system = system;
-    this.active = active;
-    this.startX = x;
-    this.startY = y;
+    this.group = group;
+    this.start = { x, y };
+    this.next = { x, y };
+    this.state = active ? "idle" : "inactive";
+
+    /** @type {Sprite} */
+    this.sprite;
 
     if (active) {
-      this.sprite = new system.group.Sprite(getRandomCard(), x, y);
-      this.layer = 2;
+      this.sprite = new this.group.Sprite(getRandomCard(), x, y);
+      this.sprite.physics = KINEMATIC;
+      // this.layer = 2;
     } else {
-      this.sprite = new system.group.Sprite(x, y);
-      this.layer = 1;
+      this.sprite = new this.group.Sprite("back", x, y);
+      // this.layer = 1;
     }
 
-    this.sprite.layer = this.layer;
+    // this.sprite.layer = this.layer;
+    this.system.cardObj[this.sprite.idNum] = this;
+    this.setLayer(LAYER_BG);
   }
 
-  reset() {
-    this.sprite.moveTowards(this.startX, this.startY, 1);
-    this.sprite.layer = this.layer;
+  resetPos(percentage = 1) {
+    this.sprite.moveTowards(this.start.x, this.start.y, percentage);
+  }
+
+  setLayer(layer) {
+    this.sprite.layer = layer;
+  }
+
+  updatePos() {
+    this.start = { ...this.next };
+  }
+
+  setState(state) {
+    this.state = state;
+  }
+
+  update() {
+    switch (this.state) {
+      case "idle":
+        if (this.sprite.mouse.dragging()) {
+          this.setState("dragging");
+          break;
+        }
+        if (this.sprite.mouse.hovering()) {
+          this.setState("hovering");
+          break;
+        }
+        this.resetPos();
+        break;
+
+      case "hovering":
+        if (!this.sprite.mouse.hovering()) {
+          this.setState("idle");
+          break;
+        }
+        if (this.sprite.mouse.dragging()) {
+          this.setState("dragging");
+          break;
+        }
+        this.sprite.x = this.start.x - clamp(this.start.x - mouse.x, -1, 1);
+        this.sprite.y = this.start.y - clamp(this.start.y - mouse.y, -1, 1);
+        break;
+
+      case "dragging":
+        if (!this.sprite.mouse.dragging()) {
+          this.setState("reset");
+          break;
+        }
+        this.setLayer(LAYER_FG);
+        this.sprite.moveTowards(mouse, 0.4);
+        break;
+
+      case "reset":
+        if (!this.sprite.isMoving) {
+          this.setLayer(LAYER_BG);
+          this.setState("idle");
+          break;
+        }
+        this.resetPos(0.6);
+        this.setLayer(LAYER_MG);
+        break;
+    }
   }
 }
 
@@ -67,4 +147,3 @@ function getRandomCard() {
   const s = ss[Math.floor(Math.random() * ss.length)];
   return r + s;
 }
-
