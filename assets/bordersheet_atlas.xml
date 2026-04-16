@@ -1,0 +1,6 @@
+<TextureAtlas imagePath="bordersheet.png">
+  <SubTexture name="corner.png" x="0" y="0" width="23" height="23"/>
+  <SubTexture name="edge.png" x="37" y="0" width="39" height="23"/>
+  <SubTexture name="filler_edge.png" x="23" y="0" width="14" height="6"/>
+  <SubTexture name="filler_center.png" x="23" y="6" width="14" height="5"/>
+</TextureAtlas>

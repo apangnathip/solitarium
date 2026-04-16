@@ -1,0 +1,59 @@
+<TextureAtlas imagePath="traffic.png">
+  <SubTexture name="back" x="0" y="0" width="32" height="48"/>
+
+  <SubTexture name="2H" x="0" y="48" width="32" height="48"/>
+  <SubTexture name="3H" x="32" y="48" width="32" height="48"/>
+  <SubTexture name="4H" x="64" y="48" width="32" height="48"/>
+  <SubTexture name="5H" x="96" y="48" width="32" height="48"/>
+  <SubTexture name="6H" x="128" y="48" width="32" height="48"/>
+  <SubTexture name="7H" x="160" y="48" width="32" height="48"/>
+  <SubTexture name="8H" x="192" y="48" width="32" height="48"/>
+  <SubTexture name="9H" x="224" y="48" width="32" height="48"/>
+  <SubTexture name="0H" x="256" y="48" width="32" height="48"/>
+  <SubTexture name="JH" x="288" y="48" width="32" height="48"/>
+  <SubTexture name="QH" x="320" y="48" width="32" height="48"/>
+  <SubTexture name="KH" x="352" y="48" width="32" height="48"/>
+  <SubTexture name="AH" x="384" y="48" width="32" height="48"/>
+
+  <SubTexture name="2D" x="0" y="96" width="32" height="48"/>
+  <SubTexture name="3D" x="32" y="96" width="32" height="48"/>
+  <SubTexture name="4D" x="64" y="96" width="32" height="48"/>
+  <SubTexture name="5D" x="96" y="96" width="32" height="48"/>
+  <SubTexture name="6D" x="128" y="96" width="32" height="48"/>
+  <SubTexture name="7D" x="160" y="96" width="32" height="48"/>
+  <SubTexture name="8D" x="192" y="96" width="32" height="48"/>
+  <SubTexture name="9D" x="224" y="96" width="32" height="48"/>
+  <SubTexture name="0D" x="256" y="96" width="32" height="48"/>
+  <SubTexture name="JD" x="288" y="96" width="32" height="48"/>
+  <SubTexture name="QD" x="320" y="96" width="32" height="48"/>
+  <SubTexture name="KD" x="352" y="96" width="32" height="48"/>
+  <SubTexture name="AD" x="384" y="96" width="32" height="48"/>
+
+  <SubTexture name="2C" x="0" y="144" width="32" height="48"/>
+  <SubTexture name="3C" x="32" y="144" width="32" height="48"/>
+  <SubTexture name="4C" x="64" y="144" width="32" height="48"/>
+  <SubTexture name="5C" x="96" y="144" width="32" height="48"/>
+  <SubTexture name="6C" x="128" y="144" width="32" height="48"/>
+  <SubTexture name="7C" x="160" y="144" width="32" height="48"/>
+  <SubTexture name="8C" x="192" y="144" width="32" height="48"/>
+  <SubTexture name="9C" x="224" y="144" width="32" height="48"/>
+  <SubTexture name="0C" x="256" y="144" width="32" height="48"/>
+  <SubTexture name="JC" x="288" y="144" width="32" height="48"/>
+  <SubTexture name="QC" x="320" y="144" width="32" height="48"/>
+  <SubTexture name="KC" x="352" y="144" width="32" height="48"/>
+  <SubTexture name="AC" x="384" y="144" width="32" height="48"/>
+
+  <SubTexture name="2S" x="0" y="192" width="32" height="48"/>
+  <SubTexture name="3S" x="32" y="192" width="32" height="48"/>
+  <SubTexture name="4S" x="64" y="192" width="32" height="48"/>
+  <SubTexture name="5S" x="96" y="192" width="32" height="48"/>
+  <SubTexture name="6S" x="128" y="192" width="32" height="48"/>
+  <SubTexture name="7S" x="160" y="192" width="32" height="48"/>
+  <SubTexture name="8S" x="192" y="192" width="32" height="48"/>
+  <SubTexture name="9S" x="224" y="192" width="32" height="48"/>
+  <SubTexture name="0S" x="256" y="192" width="32" height="48"/>
+  <SubTexture name="JS" x="288" y="192" width="32" height="48"/>
+  <SubTexture name="QS" x="320" y="192" width="32" height="48"/>
+  <SubTexture name="KS" x="352" y="192" width="32" height="48"/>
+  <SubTexture name="AS" x="384" y="192" width="32" height="48"/>
+</TextureAtlas>
