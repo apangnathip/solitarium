@@ -33,10 +33,6 @@ function drawBorders() {
   borders.image = "./assets/borders.png";
 }
 
-function clamp(num, min, max) {
-  return Math.max(min, Math.min(num, max));
-}
-
 function gameUpdate() {
   cardSystem.update();
   allSprites.update();

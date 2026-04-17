@@ -50,13 +50,15 @@ class CardSystem {
 
 class CardObject {
   constructor(system, group, x, y, active = false) {
-    this.width = CARD_WIDTH;
-    this.height = CARD_HEIGHT;
     this.system = system;
     this.group = group;
-    this.start = { x, y };
-    this.next = { x, y };
-    this.state = active ? "idle" : "inactive";
+    this.fsm = new StateMachine();
+    this.fsm
+      .add("idle", new IdleState(this))
+      .add("drag", new DragState(this))
+      .add("hover", new HoverState(this))
+      .add("reset", new ResetState(this))
+      .change("idle");
 
     /** @type {Sprite} */
     this.sprite;
@@ -64,86 +66,101 @@ class CardObject {
     if (active) {
       this.sprite = new this.group.Sprite(getRandomCard(), x, y);
       this.sprite.physics = KINEMATIC;
-      // this.layer = 2;
     } else {
       this.sprite = new this.group.Sprite("back", x, y);
-      // this.layer = 1;
     }
 
-    // this.sprite.layer = this.layer;
     this.system.cardObj[this.sprite.idNum] = this;
-    this.setLayer(LAYER_BG);
+    this.sprite.layer = 1;
   }
 
-  resetPos(percentage = 1) {
-    this.sprite.moveTowards(this.start.x, this.start.y, percentage);
-  }
-
-  setLayer(layer) {
-    this.sprite.layer = layer;
-  }
-
-  updatePos() {
-    this.start = { ...this.next };
-  }
-
-  setState(state) {
-    this.state = state;
+  setPos({ x, y }) {
+    this.sprite.x = x;
+    this.sprite.y = y;
   }
 
   update() {
-    switch (this.state) {
-      case "idle":
-        if (this.sprite.mouse.dragging()) {
-          this.setState("dragging");
-          break;
-        }
-        if (this.sprite.mouse.hovering()) {
-          this.setState("hovering");
-          break;
-        }
-        this.resetPos();
-        break;
-
-      case "hovering":
-        if (!this.sprite.mouse.hovering()) {
-          this.setState("idle");
-          break;
-        }
-        if (this.sprite.mouse.dragging()) {
-          this.setState("dragging");
-          break;
-        }
-        this.sprite.x = this.start.x - clamp(this.start.x - mouse.x, -1, 1);
-        this.sprite.y = this.start.y - clamp(this.start.y - mouse.y, -1, 1);
-        break;
-
-      case "dragging":
-        if (!this.sprite.mouse.dragging()) {
-          this.setState("reset");
-          break;
-        }
-        this.setLayer(LAYER_FG);
-        this.sprite.moveTowards(mouse, 0.4);
-        break;
-
-      case "reset":
-        if (!this.sprite.isMoving) {
-          this.setLayer(LAYER_BG);
-          this.setState("idle");
-          break;
-        }
-        this.resetPos(0.6);
-        this.setLayer(LAYER_MG);
-        break;
-    }
+    this.fsm.update();
   }
 }
 
-function getRandomCard() {
-  const rs = ["2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K", "A"];
-  const ss = ["H", "D", "C", "S"];
-  const r = rs[Math.floor(Math.random() * rs.length)];
-  const s = ss[Math.floor(Math.random() * ss.length)];
-  return r + s;
+class CardState extends State {
+  /** @param {CardObject} cardObj  */
+  constructor(cardObj) {
+    super(cardObj.fsm);
+    this.card = cardObj;
+  }
+}
+
+class IdleState extends CardState {
+  update() {
+    if (this.card.sprite.mouse.dragging()) this.fsm.change("drag");
+    if (this.card.sprite.mouse.hovering()) this.fsm.change("hover");
+  }
+}
+
+class HoverState extends CardState {
+  update() {
+    if (!this.card.sprite.mouse.hovering()) {
+      this.fsm.change("idle");
+      return;
+    }
+    if (this.card.sprite.mouse.dragging()) {
+      this.fsm.change("drag");
+      return;
+    }
+
+    this.card.sprite.x = this.clampedPull(this.startPos.x, mouse.x);
+    this.card.sprite.y = this.clampedPull(this.startPos.y, mouse.y);
+  }
+
+  enter() {
+    this.startPos = { x: this.card.sprite.x, y: this.card.sprite.y };
+  }
+
+  exit() {
+    this.card.setPos(this.startPos);
+  }
+
+  clampedPull(from, to) {
+    return from - clamp(from - to, -1, 1);
+  }
+}
+
+class DragState extends CardState {
+  update() {
+    if (!this.card.sprite.mouse.dragging()) {
+      this.fsm.change("reset", this.startPos);
+    }
+    this.card.sprite.moveTowards(mouse, 0.4);
+  }
+
+  enter() {
+    this.card.sprite.layer++;
+    this.startPos = { x: this.card.sprite.x, y: this.card.sprite.y };
+  }
+
+  exit() {
+    this.card.sprite.layer--;
+  }
+}
+
+class ResetState extends CardState {
+  update() {
+    this.card.sprite.moveTowards(this.startPos, 0.6);
+
+    if (!this.card.sprite.isMoving) {
+      this.fsm.change("idle");
+      return;
+    }
+  }
+
+  enter(startPos) {
+    this.card.sprite.layer++;
+    this.startPos = startPos;
+  }
+
+  exit() {
+    this.card.sprite.layer--;
+  }
 }
