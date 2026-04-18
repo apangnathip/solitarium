@@ -1,10 +1,3 @@
-const CARD_WIDTH = 32;
-const CARD_HEIGHT = 48;
-const BOUNDS = { nw: { x: 6, y: 6 }, se: { x: 263, y: 243 } };
-
-/** @type {CardSystem} */
-let cardSystem;
-
 class CardSystem {
   constructor() {
     cardSystem = this;
@@ -13,6 +6,7 @@ class CardSystem {
     this.group = new Group();
     this.spriteToCard = {};
     this.groupToStack = {};
+    this.pool = [];
   }
 
   async init() {
@@ -194,7 +188,7 @@ class Stack {
   }
 
   isLegalPush(card) {
-    return checkStackLegality(card.value, this.getTopCard().value);
+    return checkStackingLegality(card.value, this.getTopCard().value);
   }
 }
 
@@ -283,9 +277,7 @@ class DragState extends CardState {
   }
 
   changeStack() {
-    if (!this.newStack.isLegalPush(this.card)) {
-      this.newStack = this.oldStack;
-    }
+    // if (!this.newStack.isLegalPush(this.card)) this.newStack = this.oldStack;
     if (this.newStack !== this.card.stack) {
       this.card.stack.popTo(this.card);
       this.newStack.push(...this.cards);
@@ -333,7 +325,7 @@ class FollowState extends CardState {
   enter(offset, idx) {
     this.idx = idx;
     this.offset = offset;
-    this.offset.y -= this.card.stack.gap * idx;
+    this.offset.y -= (this.card.stack.gap + 5) * idx;
   }
 }
 

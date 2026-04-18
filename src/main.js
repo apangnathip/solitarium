@@ -4,7 +4,7 @@ let testGroup;
 
 async function setup() {
   await Canvas(350, 250);
-  displayMode("center", "pixelated", 2);
+  displayMode("maxed", "pixelated", 1);
 
   allSprites.pixelPerfect = true;
   allSprites.physics = NONE;
