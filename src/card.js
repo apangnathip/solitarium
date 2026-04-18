@@ -6,13 +6,17 @@ class CardSystem {
     this.group = new Group();
     this.spriteToCard = {};
     this.groupToStack = {};
-    this.pool = [];
+    this.pool = createCardPool();
   }
 
   async init() {
     const atlas = await loadXML("./assets/cardsheet_atlas.xml");
     const spritesheet = await loadImage("./assets/cardsheet.png");
     this.group.addAnis(spritesheet, parseTextureAtlas(atlas));
+  }
+
+  getRandomCardFromPool() {
+    return getRandomElement(this.pool, true)[0];
   }
 
   layTableau() {
@@ -22,7 +26,9 @@ class CardSystem {
       const x = map(i, 0, this.cols - 1, BOUNDS.nw.x + px, BOUNDS.se.x - px);
       let stack = new Stack(this, x, BOUNDS.nw.y + py);
       for (let j = 0; j < this.rows; j++) {
-        stack.newCard(j === this.rows - 1);
+        if (!this.pool.length) return;
+        const delay = (this.rows* i + j) / 100;
+        stack.newCard(j === this.rows - 1).fsm.change("init", delay);
       }
     }
   }
@@ -44,30 +50,26 @@ class Card {
     this.system = system;
     this.stack = stack;
     this.active = active;
-    this.value = getRandomCard();
-    this.sprite = new stack.group.Sprite(
-      active ? this.value : "back",
-      x,
-      y,
-      DYNAMIC,
-    );
+    this.value = system.getRandomCardFromPool();
+    this.sprite = new stack.group.Sprite("back", x, y, DYNAMIC);
     this.sprite.layer = stack.size();
     this.sprite.overlaps(allSprites);
     this.id = this.sprite.idNum;
     this.system.spriteToCard[this.sprite.idNum] = this;
     this.fsm = new StateMachine();
     this.fsm
+      .add("init", new InitState(this))
       .add("idle", new IdleState(this))
       .add("drag", new DragState(this))
       .add("hover", new HoverState(this))
       .add("reset", new ResetState(this))
       .add("follow", new FollowState(this))
-      .add("flip", new FlipState(this))
-      .change("idle");
+      .add("flip", new FlipState(this));
   }
 
   isDragging = () => this.sprite.mouse.dragging();
   isHovering = () => this.sprite.mouse.hovering();
+  isMoving = () => this.sprite.isMoving;
   moveTowards = (...args) => this.sprite.moveTowards(...args);
 
   update() {
@@ -103,6 +105,10 @@ class Card {
   flipUp() {
     this.fsm.change("flip");
   }
+
+  isOnTop() {
+    return this.id === this.stack.getTopCard().id;
+  }
 }
 
 class Stack {
@@ -122,8 +128,8 @@ class Stack {
 
   newCard(isActive) {
     const { x, y } = this.getTopPos();
-    new Card(this.system, this, x, y, isActive);
     isActive ? this.faceUp++ : this.faceDown++;
+    return new Card(this.system, this, x, y, isActive);
   }
 
   size() {
@@ -306,7 +312,7 @@ class ResetState extends CardState {
   update() {
     this.card.moveTowards(this.startPos, 0.5);
 
-    if (!this.card.sprite.isMoving) {
+    if (!this.card.isMoving()) {
       this.fsm.change("idle");
       return;
     }
@@ -347,6 +353,29 @@ class FlipState extends CardState {
   }
 
   enter() {
-    this.speed = 20;
+    this.speed = 15;
+  }
+}
+
+class InitState extends CardState {
+  update() {
+    this.t += deltaTime / 1000;
+    if (this.t < this.delay) return;
+
+    this.card.sprite.moveTowards(this.endPos, 0.2);
+
+    if (!this.card.isMoving()) {
+      this.fsm.change(this.card.isOnTop() ? "flip" : "idle");
+      return;
+    }
+  }
+
+  enter(delay) {
+    this.delay = delay;
+    this.t = 0;
+    this.startPos = { x: canvas.hw, y: canvas.hh };
+    this.endPos = this.card.getPos();
+    this.card.sprite.x = this.startPos.x;
+    this.card.sprite.y = this.startPos.y;
   }
 }
