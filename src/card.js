@@ -2,7 +2,7 @@ class CardSystem {
   constructor() {
     cardSystem = this;
     this.cols = 7;
-    this.rows = 4;
+    this.rows = 8;
     this.group = new Group();
     this.spriteToCard = {};
     this.groupToStack = {};
@@ -22,13 +22,15 @@ class CardSystem {
   layTableau() {
     const py = CARD_HEIGHT / 2 + 5;
     const px = CARD_WIDTH / 2 + 5;
-    for (let i = 0; i < this.cols; i++) {
+    const layout = [7, 8, 7, 8, 7, 8, 7];
+
+    for (let i = 0; i < layout.length; i++) {
       const x = map(i, 0, this.cols - 1, BOUNDS.nw.x + px, BOUNDS.se.x - px);
       let stack = new Stack(this, x, BOUNDS.nw.y + py);
-      for (let j = 0; j < this.rows; j++) {
+      for (let j = 0; j < layout[i]; j++) {
         if (!this.pool.length) return;
-        const delay = (this.rows* i + j) / 100;
-        stack.newCard(j === this.rows - 1).fsm.change("init", delay);
+        const delay = (this.rows * i + j) / 100;
+        stack.newCard().fsm.change("init", delay);
       }
     }
   }
@@ -103,7 +105,7 @@ class Card {
   }
 
   flipUp() {
-    this.fsm.change("flip");
+    if (!this.active) this.fsm.change("flip");
   }
 
   isOnTop() {
@@ -118,35 +120,33 @@ class Stack {
     this.system.groupToStack[this.group.idNum] = this;
     this.x = x;
     this.y = y;
-    this.faceUp = 0;
-    this.faceDown = 0;
+    this.faceUpCount = 0;
     this.gap = 9;
     this.backGap = 4;
   }
 
   isOverlapping = (...args) => this.group.overlapping(...args);
 
-  newCard(isActive) {
+  newCard() {
     const { x, y } = this.getTopPos();
-    isActive ? this.faceUp++ : this.faceDown++;
-    return new Card(this.system, this, x, y, isActive);
+    return new Card(this.system, this, x, y);
   }
 
   size() {
-    return this.faceDown + this.faceUp;
+    return this.group.length;
   }
 
   pop() {
     let card = this.group.pop();
     if (!card) return;
-    this.faceUp--;
+    this.faceUpCount--;
     return card;
   }
 
   popTo(card) {
     let cardSprite;
     while ((cardSprite = this.group.pop())) {
-      this.faceUp--;
+      this.faceUpCount--;
       if (cardSprite.idNum === card.id) return;
     }
   }
@@ -154,18 +154,22 @@ class Stack {
   push(...cards) {
     for (const card of cards) {
       this.group.push(card.sprite);
-      this.faceUp++;
+      this.faceUpCount++;
     }
   }
 
-  getTopPos(ignoreTop = 0) {
+  getTopPos(faceUpOffset = 0, faceDownOffset = 0) {
     return {
       x: this.x,
       y:
         this.y +
-        this.gap * (this.faceUp - ignoreTop) +
-        this.backGap * this.faceDown,
+        this.backGap * (this.getFaceDownCount() + faceDownOffset) +
+        this.gap * (this.faceUpCount + faceUpOffset),
     };
+  }
+
+  getFaceDownCount() {
+    return this.size() - this.faceUpCount;
   }
 
   getTopCard() {
@@ -187,10 +191,9 @@ class Stack {
   }
 
   flipTopCard() {
-    if (this.faceUp || !this.size()) return;
+    if (!this.faceUpCount || !this.size()) return;
     this.getTopCard().flipUp();
-    this.faceUp++;
-    this.faceDown--;
+    this.faceUpCount++;
   }
 
   isLegalPush(card) {

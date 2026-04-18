@@ -115,7 +115,7 @@ class DragState extends CardState {
     }
     this.cards.forEach((card, i) => {
       card.stack = this.newStack;
-      card.fsm.change("reset", this.newStack.getTopPos(this.cards.length - i));
+      card.fsm.change("reset", card.stack.getTopPos(i - this.cards.length + 1, -1));
     });
   }
 
@@ -135,16 +135,17 @@ class DragState extends CardState {
 
 class ResetState extends CardState {
   update() {
-    this.card.moveTowards(this.startPos, 0.5);
+    this.card.moveTowards(this.endPos, 0.5);
 
     if (!this.card.isMoving()) {
+      this.card.setPos(this.endPos)
       this.fsm.change("idle");
       return;
     }
   }
 
-  enter(startPos) {
-    this.startPos = startPos;
+  enter(endPos) {
+    this.endPos = endPos;
   }
 }
 
