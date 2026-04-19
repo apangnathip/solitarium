@@ -1,7 +1,9 @@
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K", "A"];
 const SUITS = ["H", "D", "C", "S"];
-const CARD_WIDTH = 32;
-const CARD_HEIGHT = 48;
+const CARD_W = 34;
+const CARD_H = 50;
+const CARD_HW = CARD_W / 2;
+const CARD_HH = CARD_H / 2;
 const BOUNDS = { nw: { x: 6, y: 6 }, se: { x: 263, y: 243 } };
 const RANK_TO_NUMERIC = {
   A: 1,

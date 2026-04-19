@@ -15,13 +15,14 @@ class InitState extends CardState {
     this.card.sprite.moveTowards(this.endPos, 0.2);
 
     if (!this.card.isMoving()) {
-      this.fsm.change(this.card.isOnTop() ? "flip" : "idle");
+      this.fsm.change(this.card.isOnTop() ? "flip" : "idle", this.flipToPos);
       return;
     }
   }
 
-  enter(delay) {
+  enter(delay, flipToPos) {
     this.delay = delay;
+    this.flipToPos = flipToPos;
     this.t = 0;
     const x = (BOUNDS.se.x - BOUNDS.nw.x) / 2 + BOUNDS.nw.x;
     const y = canvas.h * 1.5;
@@ -100,7 +101,7 @@ class DragState extends CardState {
   detectStackHover() {
     for (const key in this.system.groupToStack) {
       const stack = this.system.groupToStack[key];
-      const isClose = Math.abs(this.card.getPos().x - stack.x) < CARD_WIDTH / 2;
+      const isClose = Math.abs(this.card.getPos().x - stack.x) < CARD_W / 2;
       if (stack.isOverlapping(this.card.sprite) && isClose) {
         this.newStack = stack;
       }
@@ -108,14 +109,21 @@ class DragState extends CardState {
   }
 
   changeStack() {
-    // if (!this.newStack.isLegalPush(this.card)) this.newStack = this.oldStack;
+    // if (!this.newStack.isLegalPush(this.card)) {
+    //   this.newStack = this.oldStack;
+    // }
+
     if (this.newStack !== this.card.stack) {
       this.card.stack.popTo(this.card);
       this.newStack.push(...this.cards);
     }
+
     this.cards.forEach((card, i) => {
       card.stack = this.newStack;
-      card.fsm.change("reset", card.stack.getTopPos(i - this.cards.length + 1, -1));
+      card.fsm.change(
+        "reset",
+        card.stack.getTopPos(i - this.cards.length + 1, -1),
+      );
     });
   }
 
@@ -138,7 +146,6 @@ class ResetState extends CardState {
     this.card.moveTowards(this.endPos, 0.5);
 
     if (!this.card.isMoving()) {
-      this.card.setPos(this.endPos)
       this.fsm.change("idle");
       return;
     }
@@ -157,13 +164,15 @@ class FollowState extends CardState {
   enter(offset, idx) {
     this.idx = idx;
     this.offset = offset;
-    this.offset.y -= (this.card.stack.gap + 5) * idx;
+    this.offset.y -= this.card.stack.gap * idx;
   }
 }
 
 class FlipState extends CardState {
   update() {
     this.card.sprite.scale.x -= this.speed * (deltaTime / 1000);
+
+    this.card.sprite.moveTo(this.endPos, 3);
 
     if (this.card.sprite.scale.x < 0) {
       this.card.sprite.scale.x = 0;
@@ -173,12 +182,14 @@ class FlipState extends CardState {
 
     if (this.card.sprite.scale.x >= 1) {
       this.card.sprite.scale.x = 1;
+      this.card.setPos(this.endPos)
       this.card.fsm.change("idle");
       this.card.active = true;
     }
   }
 
-  enter() {
+  enter(endPos = this.card.getPos()) {
     this.speed = 15;
+    this.endPos = endPos;
   }
 }

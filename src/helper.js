@@ -6,10 +6,15 @@ function vecSub(v1, v2) {
   return { x: v2.x - v1.x, y: v2.y - v1.y };
 }
 
-function getRandomElement(arr, popElement = false) {
+function getRandomElement(arr) {
   const i = floor(random(arr.length));
   const value = arr[i];
-  if (popElement) arr.splice(i, 1);
+  return [value, i];
+}
+
+function popRandomElement(arr) {
+  const [value, i] = getRandomElement(arr);
+  arr.splice(i, 1);
   return [value, i];
 }
 

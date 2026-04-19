@@ -16,22 +16,44 @@ class CardSystem {
   }
 
   getRandomCardFromPool() {
-    return getRandomElement(this.pool, true)[0];
+    return popRandomElement(this.pool)[0];
   }
 
   layTableau() {
-    const py = CARD_HEIGHT / 2 + 5;
-    const px = CARD_WIDTH / 2 + 5;
-    const layout = [7, 8, 7, 8, 7, 8, 7];
+    const layout = [1, 2, 3, 4, 5, 6, 7];
+    const pad = 5;
+    const pl = pad + CARD_HW;
+    const pt = pad + CARD_HH;
+
+    const stackPos = (i) => {
+      return floor(
+        map(i, 0, this.cols - 1, BOUNDS.nw.x + pl, BOUNDS.se.x - pl),
+      );
+    };
 
     for (let i = 0; i < layout.length; i++) {
-      const x = map(i, 0, this.cols - 1, BOUNDS.nw.x + px, BOUNDS.se.x - px);
-      let stack = new Stack(this, x, BOUNDS.nw.y + py);
+      const cascade = new Cascade(
+        this,
+        stackPos(i),
+        BOUNDS.nw.y + pt + CARD_H + pad,
+      );
       for (let j = 0; j < layout[i]; j++) {
         if (!this.pool.length) return;
         const delay = (this.rows * i + j) / 100;
-        stack.newCard().fsm.change("init", delay);
+        cascade.newCard().fsm.change("init", delay);
       }
+    }
+
+    let stockPos = { x: stackPos(0), y: BOUNDS.nw.y + pt };
+    const stock = new Stock(this, stockPos.x, stockPos.y, {
+      x: stackPos(1),
+      y: stockPos.y,
+    });
+
+    while (true) {
+      const [value] = popRandomElement(this.pool);
+      if (!value) break;
+      stock.newCard().fsm.change("init", 0.75, { x: stackPos(1), y: stock.y });
     }
   }
 
@@ -104,99 +126,7 @@ class Card {
     return sprites.map((sprite) => this.system.getWrapper(sprite));
   }
 
-  flipUp() {
-    if (!this.active) this.fsm.change("flip");
-  }
-
   isOnTop() {
     return this.id === this.stack.getTopCard().id;
-  }
-}
-
-class Stack {
-  constructor(system, x, y) {
-    this.system = system;
-    this.group = new system.group.Group();
-    this.system.groupToStack[this.group.idNum] = this;
-    this.x = x;
-    this.y = y;
-    this.faceUpCount = 0;
-    this.gap = 9;
-    this.backGap = 4;
-  }
-
-  isOverlapping = (...args) => this.group.overlapping(...args);
-
-  newCard() {
-    const { x, y } = this.getTopPos();
-    return new Card(this.system, this, x, y);
-  }
-
-  size() {
-    return this.group.length;
-  }
-
-  pop() {
-    let card = this.group.pop();
-    if (!card) return;
-    this.faceUpCount--;
-    return card;
-  }
-
-  popTo(card) {
-    let cardSprite;
-    while ((cardSprite = this.group.pop())) {
-      this.faceUpCount--;
-      if (cardSprite.idNum === card.id) return;
-    }
-  }
-
-  push(...cards) {
-    for (const card of cards) {
-      this.group.push(card.sprite);
-      this.faceUpCount++;
-    }
-  }
-
-  getTopPos(faceUpOffset = 0, faceDownOffset = 0) {
-    return {
-      x: this.x,
-      y:
-        this.y +
-        this.backGap * (this.getFaceDownCount() + faceDownOffset) +
-        this.gap * (this.faceUpCount + faceUpOffset),
-    };
-  }
-
-  getFaceDownCount() {
-    return this.size() - this.faceUpCount;
-  }
-
-  getTopCard() {
-    return this.system.getWrapper(this.group.at(-1));
-  }
-
-  splitAt(card) {
-    return this.group.slice(this.getCardIdx(card));
-  }
-
-  getCardIdx(card) {
-    return this.group.findIndex(({ idNum }) => card.id === idNum);
-  }
-
-  updateCardLayers() {
-    for (const [i, sprite] of this.group.entries()) {
-      sprite.layer = i + 1;
-    }
-  }
-
-  flipTopCard() {
-    if (!this.faceUpCount || !this.size()) return;
-    this.getTopCard().flipUp();
-    this.faceUpCount++;
-  }
-
-  isLegalPush(card) {
-    return checkStackingLegality(card.value, this.getTopCard().value);
   }
 }
