@@ -49,11 +49,12 @@ class CardSystem {
       x: stackPos(1),
       y: stockPos.y,
     });
+    let i = 0;
 
-    while (true) {
+    for (let i = 0; i < this.pool.length; i++) {
       const [value] = popRandomElement(this.pool);
       if (!value) break;
-      stock.newCard().fsm.change("init", 0.75, { x: stackPos(1), y: stock.y });
+      stock.newCard().fsm.change("init", 0.5 + i/20, { x: stackPos(1), y: stock.y });
     }
   }
 
