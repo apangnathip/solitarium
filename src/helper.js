@@ -8,14 +8,12 @@ function vecSub(v1, v2) {
 
 function getRandomElement(arr) {
   const i = floor(random(arr.length));
-  const value = arr[i];
-  return [value, i];
+  return [arr[i], i];
 }
 
 function popRandomElement(arr) {
-  const [value, i] = getRandomElement(arr);
-  arr.splice(i, 1);
-  return [value, i];
+  const i = floor(random(arr.length));
+  return [arr.splice(i, 1)[0], i];
 }
 
 function getRandomCard() {

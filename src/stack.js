@@ -2,6 +2,8 @@ class Stack {
   constructor(system, x, y) {
     this.system = system;
     this.group = new system.group.Group();
+    this.faceUpCount = 0;
+    this.autoFlip = true;
     this.x = floor(x);
     this.y = floor(y);
   }
@@ -24,11 +26,26 @@ class Stack {
   }
 
   popTo(card) {
+    const popped = [];
     let cardSprite;
     while ((cardSprite = this.group.pop())) {
-      this.faceUpCount--;
-      if (cardSprite.idNum === card.id) return;
+      popped.push(cardSprite);
+      if (cardSprite.idNum === card.id) break;
     }
+    this.faceUpCount -= popped.length;
+    return popped;
+  }
+
+  flipTopCard(flipToPos) {
+    if (!this.size()) return;
+    const card = this.getTopCard();
+    if (card.active) return;
+    if (flipToPos) {
+      card.fsm.change("flip", flipToPos);
+    } else {
+      card.fsm.change("flip");
+    }
+    this.faceUpCount++;
   }
 
   push(...cards) {
@@ -59,17 +76,13 @@ class Stack {
       sprite.layer = i + 1;
     }
   }
-
-  isLegalPush(card) {
-    return checkStackingLegality(card.value, this.getTopCard().value);
-  }
 }
 
 class Cascade extends Stack {
   constructor(system, x, y) {
     super(system, x, y);
+    this.type ="cascade"
     this.system.groupToStack[this.group.idNum] = this;
-    this.faceUpCount = 0;
     this.gap = 14;
     this.backGap = 3;
   }
@@ -89,19 +102,17 @@ class Cascade extends Stack {
     };
   }
 
-  flipTopCard() {
-    if (!this.size()) return;
-    const card = this.getTopCard();
-    if (card.active) return;
-    card.fsm.change("flip");
-    this.faceUpCount++;
+  isLegalPush(card) {
+    return checkStackingLegality(card.value, this.getTopCard().value);
   }
 }
 
 class Stock extends Stack {
   constructor(system, x, y, drawnPos) {
     super(system, x, y);
+    this.type ="stock"
     this.drawnPos = drawnPos;
+    this.drawnSize = 0;
   }
 
   newCard() {
@@ -109,14 +120,26 @@ class Stock extends Stack {
   }
 
   flipTopCard() {
-    if (!this.size()) return;
-    const card = this.getTopCard();
-    if (card.active) return;
-    card.fsm.change("flip", this.drawnPos);
-    this.faceUpCount++;
+    super.flipTopCard(this.drawnPos);
   }
 
   getTopPos() {
     return this.drawnPos;
+  }
+
+  popTo(card) {
+    this.drawnSize -= super.popTo(card).length;
+  }
+
+  pull() {
+    const idx = this.group.length - (this.drawnSize + 1);
+    const [card] = this.group.splice(idx, 1);
+    this.group.push(card);
+    this.drawnSize++;
+    this.updateCardLayers();
+  }
+  
+  isLegalPush() {
+    return false;
   }
 }

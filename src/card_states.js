@@ -14,15 +14,19 @@ class InitState extends CardState {
 
     this.card.sprite.moveTowards(this.endPos, 0.2);
 
-    if (!this.card.isMoving()) {
-      this.fsm.change(this.card.isOnTop() ? "flip" : "idle", this.flipToPos);
+    if (!this.card.moving()) {
+      this.fsm.change(
+        this.card.isOnTop() && this.card.stack.autoFlip ? "flip" : "idle",
+        this.flipToPos,
+      );
       return;
     }
   }
 
-  enter(delay, flipToPos) {
+  enter(delay, flipToPos, autoFlip = true) {
     this.delay = delay;
     this.flipToPos = flipToPos;
+    this.autoFlip = autoFlip;
     this.t = 0;
     const x = (BOUNDS.se.x - BOUNDS.nw.x) / 2 + BOUNDS.nw.x;
     const y = canvas.h * 1.5;
@@ -35,19 +39,28 @@ class InitState extends CardState {
 
 class IdleState extends CardState {
   update() {
-    if (!this.card.active) return;
-    if (this.card.isDragging()) this.fsm.change("drag");
-    if (this.card.isHovering()) this.fsm.change("hover");
+    if (!this.card.active) {
+      if (this.card.pressed() && this.card.stack.type === "stock") {
+        this.card.stack.pull();
+        this.fsm.change("flip", this.flipToPos);
+      }
+      return;
+    }
+    if (this.card.hovering()) this.fsm.change("hover");
+  }
+
+  enter(flipToPos) {
+    this.flipToPos = flipToPos;
   }
 }
 
 class HoverState extends CardState {
   update() {
-    if (!this.card.isHovering()) {
+    if (!this.card.hovering()) {
       this.fsm.change("idle");
       return;
     }
-    if (this.card.isDragging()) {
+    if (this.card.dragging()) {
       this.fsm.change("drag");
       return;
     }
@@ -73,7 +86,7 @@ class HoverState extends CardState {
 
 class DragState extends CardState {
   update() {
-    if (!this.card.isDragging()) {
+    if (!this.card.dragging()) {
       this.changeStack();
       return;
     }
@@ -82,10 +95,10 @@ class DragState extends CardState {
   }
 
   dragCards() {
-    this.cards.forEach((card, i) => {
+    for (const [i, card] of this.cards.entries()) {
       if (card === this.card) {
         card.moveTowards(vecSub(this.grabOffset, mouse), 1);
-        return;
+        continue;
       }
       card.fsm.change(
         "follow",
@@ -95,7 +108,7 @@ class DragState extends CardState {
         },
         i,
       );
-    });
+    }
   }
 
   detectStackHover() {
@@ -109,22 +122,22 @@ class DragState extends CardState {
   }
 
   changeStack() {
-    // if (!this.newStack.isLegalPush(this.card)) {
-    //   this.newStack = this.oldStack;
-    // }
+    if (this.system.strictStacking && !this.newStack.isLegalPush(this.card)) {
+      this.newStack = this.oldStack;
+    }
 
     if (this.newStack !== this.card.stack) {
       this.card.stack.popTo(this.card);
       this.newStack.push(...this.cards);
     }
 
-    this.cards.forEach((card, i) => {
+    for (const [i, card] of this.cards.entries()) {
       card.stack = this.newStack;
       card.fsm.change(
         "reset",
         card.stack.getTopPos(i - this.cards.length + 1, -1),
       );
-    });
+    }
   }
 
   enter() {
@@ -137,7 +150,7 @@ class DragState extends CardState {
 
   exit() {
     this.newStack.updateCardLayers();
-    this.oldStack.flipTopCard();
+    if (this.oldStack.autoFlip) this.oldStack.flipTopCard();
   }
 }
 
@@ -145,7 +158,7 @@ class ResetState extends CardState {
   update() {
     this.card.moveTowards(this.endPos, 0.5);
 
-    if (!this.card.isMoving()) {
+    if (!this.card.moving()) {
       this.fsm.change("idle");
       return;
     }
@@ -171,7 +184,6 @@ class FollowState extends CardState {
 class FlipState extends CardState {
   update() {
     this.card.sprite.scale.x -= this.speed * (deltaTime / 1000);
-
     this.card.sprite.moveTo(this.endPos, 3);
 
     if (this.card.sprite.scale.x < 0) {
@@ -181,15 +193,18 @@ class FlipState extends CardState {
     }
 
     if (this.card.sprite.scale.x >= 1) {
-      this.card.sprite.scale.x = 1;
-      this.card.setPos(this.endPos)
       this.card.fsm.change("idle");
-      this.card.active = true;
     }
   }
 
   enter(endPos = this.card.getPos()) {
     this.speed = 15;
     this.endPos = endPos;
+  }
+
+  exit() {
+    this.card.setPos(this.endPos);
+    this.card.sprite.scale.x = 1;
+    this.card.active = true;
   }
 }

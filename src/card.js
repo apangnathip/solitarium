@@ -6,6 +6,7 @@ class CardSystem {
     this.group = new Group();
     this.spriteToCard = {};
     this.groupToStack = {};
+    this.strictStacking = false;
     this.pool = createCardPool();
   }
 
@@ -39,7 +40,7 @@ class CardSystem {
       );
       for (let j = 0; j < layout[i]; j++) {
         if (!this.pool.length) return;
-        const delay = (this.rows * i + j) / 100;
+        const delay = (layout[i] * i + j) / 100;
         cascade.newCard().fsm.change("init", delay);
       }
     }
@@ -49,12 +50,14 @@ class CardSystem {
       x: stackPos(1),
       y: stockPos.y,
     });
-    let i = 0;
+    stock.autoFlip = false;
 
-    for (let i = 0; i < this.pool.length; i++) {
-      const [value] = popRandomElement(this.pool);
-      if (!value) break;
-      stock.newCard().fsm.change("init", 0.5 + i/20, { x: stackPos(1), y: stock.y });
+    let i = 0;
+    while (this.pool.length) {
+      stock
+        .newCard()
+        .fsm.change("init", 0.5 + i / 40, { x: stackPos(1), y: stock.y });
+      i++;
     }
   }
 
@@ -92,9 +95,10 @@ class Card {
       .add("flip", new FlipState(this));
   }
 
-  isDragging = () => this.sprite.mouse.dragging();
-  isHovering = () => this.sprite.mouse.hovering();
-  isMoving = () => this.sprite.isMoving;
+  pressed = () => this.sprite.mouse.presses();
+  dragging = () => this.sprite.mouse.dragging();
+  hovering = () => this.sprite.mouse.hovering();
+  moving = () => this.sprite.isMoving;
   moveTowards = (...args) => this.sprite.moveTowards(...args);
 
   update() {
