@@ -77,6 +77,7 @@ class HoverState extends CardState {
 
   exit() {
     this.card.sprite.moveTo(this.startPos);
+    super.exit();
   }
 
   clampedPull(from, to) {
@@ -151,6 +152,7 @@ class DragState extends CardState {
   exit() {
     this.newStack.updateCardLayers();
     if (this.oldStack.autoFlip) this.oldStack.flipTopCard();
+    super.exit();
   }
 }
 
@@ -184,27 +186,30 @@ class FollowState extends CardState {
 class FlipState extends CardState {
   update() {
     this.card.sprite.scale.x -= this.speed * (deltaTime / 1000);
-    this.card.sprite.moveTo(this.endPos, 3);
+    this.card.sprite.moveTo(this.flipTo, 3);
 
     if (this.card.sprite.scale.x < 0) {
       this.card.sprite.scale.x = 0;
-      this.card.sprite.changeAni(this.card.value);
+      this.card.sprite.changeAni(this.up ? this.card.value : "back");
       this.speed *= -1;
     }
 
     if (this.card.sprite.scale.x >= 1) {
-      this.card.fsm.change("idle");
+      this.card.fsm.change("idle", this.flipFrom);
     }
   }
 
-  enter(endPos = this.card.getPos()) {
+  enter(flipTo = this.card.getPos(), flipFrom = this.card.getPos(), up = true) {
+    this.up = up;
     this.speed = 15;
-    this.endPos = endPos;
+    this.flipTo = flipTo;
+    this.flipFrom = flipFrom;
   }
 
   exit() {
-    this.card.setPos(this.endPos);
+    this.card.setPos(this.flipTo);
     this.card.sprite.scale.x = 1;
-    this.card.active = true;
+    this.card.active = this.up;
+    super.exit();
   }
 }

@@ -13,10 +13,16 @@ class StateMachine {
     this.state.exit();
     this.state = this.stateMap[id];
     this.state.enter(...args);
+    return this;
   }
 
   update() {
     this.state.update();
+    return this;
+  }
+
+  onExit(func) {
+    this.state.onExit = func;
   }
 }
 
@@ -24,8 +30,12 @@ class State {
   /** @param {StateMachine} fsm  */
   constructor(fsm) {
     this.fsm = fsm;
+    this.onExit = () => {};
   }
-  enter() {}
-  exit() {}
   update() {}
+  enter() {}
+  exit() {
+    this.onExit();
+    this.onExit = () => {};
+  }
 }

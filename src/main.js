@@ -4,6 +4,7 @@ async function setup() {
 
   await AssetLoader.loadImage("bg", "background.png");
   await AssetLoader.loadImage("borders", "borders.png");
+  await AssetLoader.loadImage("redeal", "redeal.png");
   await AssetLoader.loadSpritesheet("card", "cardsheet.png", "cardsheet.xml");
 
   allSprites.pixelPerfect = true;

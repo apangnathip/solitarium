@@ -1,11 +1,9 @@
 class PokerHand {
   constructor(system) {
     this.system = system;
+    this.group = new Group();
+    this.group.addAnis(...AssetLoader.spritesheets.card);
     this.slots = this.createSlots(5);
-  }
-
-  createSlot() {
-    new this.system.group.Sprite("blank");
   }
 
   createSlots(num) {

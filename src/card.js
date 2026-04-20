@@ -63,8 +63,12 @@ class CardSystem {
   }
 
   update() {
-    for (const sprite of this.group) {
-      cardSystem.getWrapper(sprite)?.update();
+    for (const [_, card] of Object.entries(this.spriteToCard)) {
+      card.update();
+    }
+
+    for (const [_, stack] of Object.entries(this.groupToStack)) {
+      stack.update();
     }
   }
 }

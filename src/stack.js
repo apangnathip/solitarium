@@ -2,6 +2,7 @@ class Stack {
   constructor(system, x, y) {
     this.system = system;
     this.group = new system.group.Group();
+    this.system.groupToStack[this.group.idNum] = this;
     this.faceUpCount = 0;
     this.autoFlip = true;
     this.x = floor(x);
@@ -13,6 +14,7 @@ class Stack {
   newCard() {}
   getTopPos() {}
   flipTopCard() {}
+  update() {}
 
   size() {
     return this.group.length;
@@ -82,7 +84,6 @@ class Cascade extends Stack {
   constructor(system, x, y) {
     super(system, x, y);
     this.type = "cascade";
-    this.system.groupToStack[this.group.idNum] = this;
     this.gap = 14;
     this.backGap = 3;
   }
@@ -113,11 +114,20 @@ class Stock extends Stack {
     this.type = "stock";
     this.drawnPos = drawnPos;
     this.drawnSize = 0;
-    this.redealButton = new Button();
+    this.redealButton = new Button(
+      x,
+      y,
+      AssetLoader.images.redeal,
+      this.redeal,
+    );
   }
 
   newCard() {
     return new Card(this.system, this, this.x, this.y);
+  }
+
+  update() {
+    this.redealButton.update();
   }
 
   flipTopCard() {
@@ -144,5 +154,18 @@ class Stock extends Stack {
     this.updateCardLayers();
   }
 
-  redeal() {}
+  redeal = () => {
+    for (const [i, sprite] of this.group.entries()) {
+      const card = this.system.getWrapper(sprite);
+      card.fsm
+        .change("flip", { x: this.x, y: this.y }, this.drawnPos, false)
+        .onExit(() => {
+          if (i === this.group.length - 1) {
+            this.drawnSize = 0;
+            this.group.reverse();
+            this.updateCardLayers();
+          }
+        });
+    }
+  };
 }
