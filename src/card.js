@@ -4,39 +4,35 @@ class CardSystem {
     this.cols = 7;
     this.rows = 8;
     this.group = new Group();
+    this.group.addAnis(...AssetLoader.spritesheets.card);
     this.spriteToCard = {};
     this.groupToStack = {};
     this.strictStacking = false;
     this.pool = createCardPool();
-  }
-
-  async init() {
-    const atlas = await loadXML("./assets/cardsheet_atlas.xml");
-    const spritesheet = await loadImage("./assets/cardsheet.png");
-    this.group.addAnis(spritesheet, parseTextureAtlas(atlas));
+    this.pad = 5;
+    this.pl = this.pad + CARD_HW;
+    this.pt = this.pad + CARD_HH;
+    this.pokerHand = new PokerHand(this);
   }
 
   getRandomCardFromPool() {
     return popRandomElement(this.pool)[0];
   }
 
+  mapStack(i) {
+    return floor(
+      map(i, 0, this.cols - 1, BOUNDS.nw.x + this.pl, BOUNDS.se.x - this.pl),
+    );
+  }
+
   layTableau() {
     const layout = [1, 2, 3, 4, 5, 6, 7];
-    const pad = 5;
-    const pl = pad + CARD_HW;
-    const pt = pad + CARD_HH;
-
-    const stackPos = (i) => {
-      return floor(
-        map(i, 0, this.cols - 1, BOUNDS.nw.x + pl, BOUNDS.se.x - pl),
-      );
-    };
 
     for (let i = 0; i < layout.length; i++) {
       const cascade = new Cascade(
         this,
-        stackPos(i),
-        BOUNDS.nw.y + pt + CARD_H + pad,
+        this.mapStack(i),
+        BOUNDS.nw.y + this.pt + CARD_H + this.pad,
       );
       for (let j = 0; j < layout[i]; j++) {
         if (!this.pool.length) return;
@@ -45,9 +41,9 @@ class CardSystem {
       }
     }
 
-    let stockPos = { x: stackPos(0), y: BOUNDS.nw.y + pt };
+    let stockPos = { x: this.mapStack(0), y: BOUNDS.nw.y + this.pt };
     const stock = new Stock(this, stockPos.x, stockPos.y, {
-      x: stackPos(1),
+      x: this.mapStack(1),
       y: stockPos.y,
     });
     stock.autoFlip = false;
@@ -56,7 +52,7 @@ class CardSystem {
     while (this.pool.length) {
       stock
         .newCard()
-        .fsm.change("init", 0.5 + i / 40, { x: stackPos(1), y: stock.y });
+        .fsm.change("init", 0.5 + i / 40, { x: this.mapStack(1), y: stock.y });
       i++;
     }
   }
@@ -68,7 +64,7 @@ class CardSystem {
 
   update() {
     for (const sprite of this.group) {
-      cardSystem.getWrapper(sprite).update();
+      cardSystem.getWrapper(sprite)?.update();
     }
   }
 }

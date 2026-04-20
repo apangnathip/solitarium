@@ -81,7 +81,7 @@ class Stack {
 class Cascade extends Stack {
   constructor(system, x, y) {
     super(system, x, y);
-    this.type ="cascade"
+    this.type = "cascade";
     this.system.groupToStack[this.group.idNum] = this;
     this.gap = 14;
     this.backGap = 3;
@@ -110,9 +110,10 @@ class Cascade extends Stack {
 class Stock extends Stack {
   constructor(system, x, y, drawnPos) {
     super(system, x, y);
-    this.type ="stock"
+    this.type = "stock";
     this.drawnPos = drawnPos;
     this.drawnSize = 0;
+    this.redealButton = new Button();
   }
 
   newCard() {
@@ -127,6 +128,10 @@ class Stock extends Stack {
     return this.drawnPos;
   }
 
+  isLegalPush() {
+    return false;
+  }
+
   popTo(card) {
     this.drawnSize -= super.popTo(card).length;
   }
@@ -138,8 +143,6 @@ class Stock extends Stack {
     this.drawnSize++;
     this.updateCardLayers();
   }
-  
-  isLegalPush() {
-    return false;
-  }
+
+  redeal() {}
 }

@@ -1,5 +1,6 @@
 <TextureAtlas imagePath="traffic.png">
-  <SubTexture name="back" x="0" y="0" width="34" height="50"/>
+  <SubTexture name="back"  x="0"  y="0" width="34" height="50"/>
+  <SubTexture name="blank" x="34" y="0" width="34" height="50"/>
 
   <SubTexture name="2H" x="0"   y="50" width="34" height="50"/>
   <SubTexture name="3H" x="34"  y="50" width="34" height="50"/>
