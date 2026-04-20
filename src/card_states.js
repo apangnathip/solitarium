@@ -4,6 +4,7 @@ class CardState extends State {
     super(card.fsm);
     this.card = card;
     this.system = card.system;
+    this.foundation = card.system.foundation;
   }
 }
 
@@ -40,13 +41,15 @@ class InitState extends CardState {
 class IdleState extends CardState {
   update() {
     if (!this.card.active) {
-      if (this.card.pressed() && this.card.stack.type === "stock") {
+      if (this.card.presses() && this.card.stack.type === "stock") {
         this.card.stack.pull();
         this.fsm.change("flip", this.flipToPos);
       }
       return;
     }
-    if (this.card.hovering()) this.fsm.change("hover");
+    if (this.card.stack.type !== "slot" && this.card.hovering()) {
+      this.fsm.change("hover");
+    }
   }
 
   enter(flipToPos) {
@@ -56,13 +59,10 @@ class IdleState extends CardState {
 
 class HoverState extends CardState {
   update() {
-    if (!this.card.hovering()) {
-      this.fsm.change("idle");
-      return;
-    }
-    if (this.card.dragging()) {
-      this.fsm.change("drag");
-      return;
+    if (!this.card.hovering()) return this.fsm.change("idle");
+    if (this.card.dragging()) return this.fsm.change("drag");
+    if (this.card.stack.type !== "slot" && mouse.pressing("right")) {
+      return this.fsm.change("select");
     }
 
     this.card.setPos({
@@ -87,10 +87,7 @@ class HoverState extends CardState {
 
 class DragState extends CardState {
   update() {
-    if (!this.card.dragging()) {
-      this.changeStack();
-      return;
-    }
+    if (!this.card.dragging()) return this.changeStack();
     this.detectStackHover();
     this.dragCards();
   }
@@ -113,13 +110,19 @@ class DragState extends CardState {
   }
 
   detectStackHover() {
+    let closest;
+    let minDist;
     for (const key in this.system.groupToStack) {
       const stack = this.system.groupToStack[key];
-      const isClose = Math.abs(this.card.getPos().x - stack.x) < CARD_W / 2;
-      if (stack.overlapping(this.card.sprite) && isClose) {
-        this.newStack = stack;
+      const { x, y } = this.card.getPos();
+      const d = dist(x, y, stack.x, stack.y);
+      if (stack.overlapping(this.card.sprite) && (!minDist || d < minDist)) {
+        if (stack.type === "slot" && this.cards.length > 1) continue;
+        minDist = d;
+        closest = stack;
       }
     }
+    if (closest) this.newStack = closest;
   }
 
   changeStack() {
@@ -159,7 +162,6 @@ class DragState extends CardState {
 class ResetState extends CardState {
   update() {
     this.card.moveTowards(this.endPos, 0.5);
-
     if (!this.card.moving()) {
       this.fsm.change("idle");
       return;
@@ -211,5 +213,15 @@ class FlipState extends CardState {
     this.card.sprite.scale.x = 1;
     this.card.active = this.up;
     super.exit();
+  }
+}
+
+class SelectState extends CardState {
+  update() {
+    this.fsm.change("idle");
+  }
+
+  enter() {
+    this.foundation.add(this.card);
   }
 }

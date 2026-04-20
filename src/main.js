@@ -1,6 +1,6 @@
 async function setup() {
   await Canvas(350, 250);
-  displayMode("center", "pixelated", 2);
+  displayMode("center", "pixelated", 3);
 
   await AssetLoader.loadImage("bg", "background.png");
   await AssetLoader.loadImage("borders", "borders.png");

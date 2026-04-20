@@ -12,7 +12,7 @@ class CardSystem {
     this.pad = 5;
     this.pl = this.pad + CARD_HW;
     this.pt = this.pad + CARD_HH;
-    this.pokerHand = new PokerHand(this);
+    this.foundation = new Foundation(this);
   }
 
   getRandomCardFromPool() {
@@ -92,14 +92,17 @@ class Card {
       .add("hover", new HoverState(this))
       .add("reset", new ResetState(this))
       .add("follow", new FollowState(this))
-      .add("flip", new FlipState(this));
+      .add("flip", new FlipState(this))
+      .add("select", new SelectState(this));
   }
 
-  pressed = () => this.sprite.mouse.presses();
-  dragging = () => this.sprite.mouse.dragging();
+  pressed = (inp) => this.sprite.mouse.pressed(inp);
+  presses = (inp) => this.sprite.mouse.presses(inp);
+  pressing = (inp) => this.sprite.mouse.pressing(inp);
   hovering = () => this.sprite.mouse.hovering();
   moving = () => this.sprite.isMoving;
   moveTowards = (...args) => this.sprite.moveTowards(...args);
+  dragging = () => this.sprite.mouse.dragging();
 
   update() {
     this.fsm.update();

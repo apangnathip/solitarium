@@ -32,18 +32,24 @@ function isSameColor(s1, s2) {
   return (red.has(s1) && red.has(s2)) || (black.has(s1) && black.has(s2));
 }
 
-function isLowerByOne(r1, r2) {
-  return RANK_TO_NUMERIC[r2] - RANK_TO_NUMERIC[r1] === 1;
+function offBy(r1, r2, v) {
+  return RANK_TO_NUMERIC[r1] - RANK_TO_NUMERIC[r2] === v;
 }
 
-function checkStackingLegality(valueA, valueB) {
-  const a = splitValue(valueA);
-  const b = splitValue(valueB);
+function checkStackingLegality(source, target) {
+  const src = splitValue(source);
+  const tgt = splitValue(target);
 
-  if (valueB === "00") return a.rank === "K";
-  if (isSameColor(a.suit, b.suit)) return false;
-  if (!isLowerByOne(a.rank, b.rank)) return false;
-  return true;
+  if (target === "00") return src.rank === "K";
+  return !isSameColor(src.suit, tgt.suit) && offBy(src.rank, tgt.rank, -1);
+}
+
+function checkFoundationLegality(source, target) {
+  const src = splitValue(source);
+  const tgt = splitValue(target);
+
+  if (target === "00") return src.rank === "A";
+  return src.suit === tgt.suit && offBy(src.rank, tgt.rank, 1);
 }
 
 function createCardPool() {

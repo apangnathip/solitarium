@@ -19,6 +19,10 @@ class Stack {
   flipTopCard() {}
   update() {}
 
+  isLegalPush(card) {
+    return checkStackingLegality(card.value, this.getTopCard().value);
+  }
+
   size() {
     return this.group.length;
   }
@@ -88,7 +92,7 @@ class Cascade extends Stack {
   constructor(system, x, y) {
     super(system, x, y);
     this.type = "cascade";
-    this.gap = 14;
+    this.gap = 10;
     this.backGap = 3;
   }
 
@@ -105,10 +109,6 @@ class Cascade extends Stack {
         this.backGap * (this.getFaceDownCount() + faceDownOffset) +
         this.gap * (this.faceUpCount + faceUpOffset),
     };
-  }
-
-  isLegalPush(card) {
-    return checkStackingLegality(card.value, this.getTopCard().value);
   }
 }
 
@@ -142,10 +142,6 @@ class Stock extends Stack {
     return this.drawnPos;
   }
 
-  isLegalPush() {
-    return false;
-  }
-
   popTo(card) {
     this.drawnSize -= super.popTo(card).length;
   }
@@ -172,4 +168,28 @@ class Stock extends Stack {
         });
     }
   };
+}
+
+class Slot extends Stack {
+  constructor(system, x, y) {
+    super(system, x, y);
+    this.type = "slot";
+    this.sprite = new this.system.group.Sprite("blank", x, y);
+    this.sprite.layer = 0;
+  }
+
+  overlapping(...args) {
+    return this.sprite.overlapping(...args);
+  }
+
+  getTopPos() {
+    return { x: this.x, y: this.y };
+  }
+
+  isLegalPush(card) {
+    const targetValue = this.group.length
+      ? this.system.getWrapper(this.group.at(-1)).value
+      : "00";
+    return checkFoundationLegality(card.value, targetValue);
+  }
 }
