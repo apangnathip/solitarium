@@ -9,7 +9,10 @@ class Stack {
     this.y = floor(y);
   }
 
-  isOverlapping = (...args) => this.group.overlapping(...args);
+  overlapping(...args) {
+    if (!this.group.length) return true;
+    return this.group.overlapping(...args);
+  }
 
   newCard() {}
   getTopPos() {}
@@ -62,6 +65,7 @@ class Stack {
   }
 
   getTopCard() {
+    if (!this.group.length) return { value: "00" };
     return this.system.getWrapper(this.group.at(-1));
   }
 

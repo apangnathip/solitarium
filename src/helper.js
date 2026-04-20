@@ -36,9 +36,11 @@ function isLowerByOne(r1, r2) {
   return RANK_TO_NUMERIC[r2] - RANK_TO_NUMERIC[r1] === 1;
 }
 
-function checkStackingLegality(value1, value2) {
-  const a = splitValue(value1);
-  const b = splitValue(value2);
+function checkStackingLegality(valueA, valueB) {
+  const a = splitValue(valueA);
+  const b = splitValue(valueB);
+
+  if (valueB === "00") return a.rank === "K";
   if (isSameColor(a.suit, b.suit)) return false;
   if (!isLowerByOne(a.rank, b.rank)) return false;
   return true;

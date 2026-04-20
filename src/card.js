@@ -7,7 +7,7 @@ class CardSystem {
     this.group.addAnis(...AssetLoader.spritesheets.card);
     this.spriteToCard = {};
     this.groupToStack = {};
-    this.strictStacking = false;
+    this.strictStacking = true;
     this.pool = createCardPool();
     this.pad = 5;
     this.pl = this.pad + CARD_HW;

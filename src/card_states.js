@@ -116,7 +116,7 @@ class DragState extends CardState {
     for (const key in this.system.groupToStack) {
       const stack = this.system.groupToStack[key];
       const isClose = Math.abs(this.card.getPos().x - stack.x) < CARD_W / 2;
-      if (stack.isOverlapping(this.card.sprite) && isClose) {
+      if (stack.overlapping(this.card.sprite) && isClose) {
         this.newStack = stack;
       }
     }
