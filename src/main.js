@@ -36,6 +36,7 @@ function draw() {
 }
 
 function gameUpdate() {
+  mouse.cursor = "default";
   cardSystem.update();
   allSprites.update();
   world.step();

@@ -9,5 +9,8 @@ class Button {
     if (this.sprite.mouse.presses()) {
       this.func();
     }
+    if (this.sprite.mouse.hovering()) {
+      mouse.cursor = "pointer";
+    }
   }
 }

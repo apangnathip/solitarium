@@ -141,6 +141,11 @@ class Card {
   dragging = () => this.sprite.mouse.dragging();
 
   update() {
+    if (this.sprite.mouse.pressing() && this.stack.type !== "stock") {
+      mouse.cursor = "grabbing";
+    } else if (this.sprite.mouse.hovering()) {
+      mouse.cursor = this.stack.type === "stock" ? "pointer" : "grab";
+    }
     this.fsm.update();
   }
 
