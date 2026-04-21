@@ -41,7 +41,7 @@ class InitState extends CardState {
 class IdleState extends CardState {
   update() {
     if (!this.card.active) {
-      if (this.card.presses() && this.card.stack.type === "stock") {
+      if (this.card.presses("left") && this.card.stack.type === "stock") {
         this.card.stack.pull();
         this.fsm.change("flip", this.flipToPos);
       }
@@ -61,7 +61,7 @@ class HoverState extends CardState {
   update() {
     if (!this.card.hovering()) return this.fsm.change("idle");
     if (this.card.dragging()) return this.fsm.change("drag");
-    if (this.card.stack.type !== "slot" && mouse.pressing("right")) {
+    if (this.card.stack.type !== "slot" && mouse.presses("right")) {
       return this.fsm.change("select");
     }
 
@@ -145,8 +145,7 @@ class DragState extends CardState {
   }
 
   enter() {
-    this.oldStack = this.card.stack;
-    this.newStack = this.card.stack;
+    this.newStack = this.oldStack = this.card.stack;
     this.grabOffset = vecSub(this.card.getPos(), mouse);
     this.cards = this.card.splitStack();
     for (const card of this.cards) card.putOnTop();
@@ -222,6 +221,8 @@ class SelectState extends CardState {
   }
 
   enter() {
-    this.foundation.add(this.card);
+    if (this.card.stack.getTopCard() === this.card) {
+      this.foundation.add(this.card);
+    }
   }
 }

@@ -19,8 +19,8 @@ class Stack {
   flipTopCard() {}
   update() {}
 
-  isLegalPush(card) {
-    return checkStackingLegality(card.value, this.getTopCard().value);
+  isLegalPush() {
+    return false;
   }
 
   size() {
@@ -99,6 +99,10 @@ class Cascade extends Stack {
   newCard() {
     const { x, y } = this.getTopPos();
     return new Card(this.system, this, x, y);
+  }
+
+  isLegalPush() {
+    return checkStackingLegality(card.value, this.getTopCard().value);
   }
 
   getTopPos(faceUpOffset = 0, faceDownOffset = 0) {

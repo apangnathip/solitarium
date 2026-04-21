@@ -7,7 +7,7 @@ class CardSystem {
     this.group.addAnis(...AssetLoader.spritesheets.card);
     this.spriteToCard = {};
     this.groupToStack = {};
-    this.strictStacking = true;
+    this.strictStacking = false;
     this.pool = createCardPool();
     this.pad = 5;
     this.pl = this.pad + CARD_HW;
@@ -102,7 +102,7 @@ class Card {
   hovering = () => this.sprite.mouse.hovering();
   moving = () => this.sprite.isMoving;
   moveTowards = (...args) => this.sprite.moveTowards(...args);
-  dragging = () => this.sprite.mouse.dragging();
+  dragging = () => mouse.pressing("left") && this.sprite.mouse.dragging();
 
   update() {
     this.fsm.update();
