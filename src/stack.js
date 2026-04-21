@@ -19,10 +19,6 @@ class Stack {
   flipTopCard() {}
   update() {}
 
-  isLegalPush() {
-    return false;
-  }
-
   size() {
     return this.group.length;
   }
@@ -101,7 +97,7 @@ class Cascade extends Stack {
     return new Card(this.system, this, x, y);
   }
 
-  isLegalPush() {
+  isLegalPush(card) {
     return checkStackingLegality(card.value, this.getTopCard().value);
   }
 
@@ -156,6 +152,10 @@ class Stock extends Stack {
     this.group.push(card);
     this.drawnSize++;
     this.updateCardLayers();
+  }
+
+  isLegalPush() {
+    return false;
   }
 
   redeal = () => {

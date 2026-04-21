@@ -47,9 +47,7 @@ class IdleState extends CardState {
       }
       return;
     }
-    if (this.card.stack.type !== "slot" && this.card.hovering()) {
-      this.fsm.change("hover");
-    }
+    if (this.card.hovering()) this.fsm.change("hover");
   }
 
   enter(flipToPos) {

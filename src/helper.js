@@ -41,6 +41,7 @@ function checkStackingLegality(source, target) {
   const tgt = splitValue(target);
 
   if (target === "00") return src.rank === "K";
+  if (src.rank === "A" && tgt.rank === "2") return false;
   return !isSameColor(src.suit, tgt.suit) && offBy(src.rank, tgt.rank, -1);
 }
 
