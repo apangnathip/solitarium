@@ -12,11 +12,31 @@ class CardSystem {
     this.pad = 5;
     this.pl = this.pad + CARD_HW;
     this.pt = this.pad + CARD_HH;
+    this.solving = false;
     this.foundation = new Foundation(this);
+    this.stock;
+    this.maxPoolCount = this.pool.length;
   }
 
   getRandomCardFromPool() {
     return popRandomElement(this.pool)[0];
+  }
+
+  getCardWrapper(sprite) {
+    return this.spriteToCard[sprite.idNum];
+  }
+
+  getStackWrapper(group) {
+    return this.groupToStack[group.idNum];
+  }
+
+  update() {
+    for (const [_, card] of Object.entries(this.spriteToCard)) {
+      card.update();
+    }
+    for (const [_, stack] of Object.entries(this.groupToStack)) {
+      stack.update();
+    }
   }
 
   mapStack(i) {
@@ -42,33 +62,45 @@ class CardSystem {
     }
 
     let stockPos = { x: this.mapStack(0), y: BOUNDS.nw.y + this.pt };
-    const stock = new Stock(this, stockPos.x, stockPos.y, {
+    this.stock = new Stock(this, stockPos.x, stockPos.y, {
       x: this.mapStack(1),
       y: stockPos.y,
     });
-    stock.autoFlip = false;
+    this.stock.autoFlip = false;
 
     let i = 0;
     while (this.pool.length) {
-      stock
-        .newCard()
-        .fsm.change("init", 0.5 + i / 40, { x: this.mapStack(1), y: stock.y });
+      this.stock.newCard().fsm.change("init", 0.5 + i / 40, {
+        x: this.mapStack(1),
+        y: this.stock.y,
+      });
       i++;
     }
   }
 
-  /** @returns {Card} */
-  getWrapper(cardSprite) {
-    return this.spriteToCard[cardSprite.idNum];
+  isWinnable() {
+    if (this.stock.group.length) return false;
+    for (const [_, stack] of Object.entries(this.groupToStack)) {
+      if (stack.type !== "cascade") continue;
+      if (!stack.isDescAndOpen()) return false;
+    }
+    return true;
   }
 
-  update() {
-    for (const [_, card] of Object.entries(this.spriteToCard)) {
-      card.update();
-    }
-
-    for (const [_, stack] of Object.entries(this.groupToStack)) {
-      stack.update();
+  solve() {
+    if (this.solving) return;
+    this.solving = true;
+    this.foundation.setCardCountBeforeSolve();
+    let added = 0;
+    let i = 0;
+    while (added + this.foundation.cardCount < this.maxPoolCount) {
+      if (i > 500) return console.error("fail to solve");
+      for (const [_, stack] of Object.entries(this.groupToStack)) {
+        if (stack.type !== "cascade") continue;
+        const card = stack.getTopCard();
+        this.foundation.autoAdd(card, added) && added++;
+        i++;
+      }
     }
   }
 }
@@ -80,6 +112,7 @@ class Card {
     this.active = active;
     this.value = system.getRandomCardFromPool();
     this.sprite = new stack.group.Sprite("back", x, y, DYNAMIC);
+    this.faceUp = false;
     this.sprite.layer = stack.size();
     this.sprite.overlaps(allSprites);
     this.id = this.sprite.idNum;
@@ -93,7 +126,10 @@ class Card {
       .add("reset", new ResetState(this))
       .add("follow", new FollowState(this))
       .add("flip", new FlipState(this))
-      .add("select", new SelectState(this));
+      .add("select", new SelectState(this))
+      .add("solve", new SolveState(this))
+      .add("bounce", new BounceState(this))
+      .add("empty", new CardState(this));
   }
 
   pressed = (inp) => this.sprite.mouse.pressed(inp);
@@ -102,7 +138,7 @@ class Card {
   hovering = () => this.sprite.mouse.hovering();
   moving = () => this.sprite.isMoving;
   moveTowards = (...args) => this.sprite.moveTowards(...args);
-  dragging = () => mouse.pressing("left") && this.sprite.mouse.dragging();
+  dragging = () => this.sprite.mouse.dragging();
 
   update() {
     this.fsm.update();
@@ -131,7 +167,7 @@ class Card {
 
   splitStack() {
     const sprites = this.stack.splitAt(this);
-    return sprites.map((sprite) => this.system.getWrapper(sprite));
+    return sprites.map((sprite) => this.system.getCardWrapper(sprite));
   }
 
   isOnTop() {

@@ -66,7 +66,13 @@ class Stack {
 
   getTopCard() {
     if (!this.group.length) return { value: "00" };
-    return this.system.getWrapper(this.group.at(-1));
+    return this.system.getCardWrapper(this.group.at(-1));
+  }
+
+  popTopCard() {
+    if (!this.group.length) return { value: "00" };
+    this.faceUpCount--;
+    return this.system.getCardWrapper(this.group.pop());
   }
 
   splitAt(card) {
@@ -109,6 +115,14 @@ class Cascade extends Stack {
         this.backGap * (this.getFaceDownCount() + faceDownOffset) +
         this.gap * (this.faceUpCount + faceUpOffset),
     };
+  }
+
+  isDescAndOpen() {
+    for (const sprite of this.group) {
+      const card = this.system.getCardWrapper(sprite);
+      if (!card.faceUp) return false;
+    }
+    return true;
   }
 }
 
@@ -160,7 +174,7 @@ class Stock extends Stack {
 
   redeal = () => {
     for (const [i, sprite] of this.group.entries()) {
-      const card = this.system.getWrapper(sprite);
+      const card = this.system.getCardWrapper(sprite);
       card.fsm
         .change("flip", { x: this.x, y: this.y }, this.drawnPos, false)
         .onExit(() => {
@@ -180,6 +194,7 @@ class Slot extends Stack {
     this.type = "slot";
     this.sprite = new this.system.group.Sprite("blank", x, y);
     this.sprite.layer = 0;
+    this.suit;
   }
 
   overlapping(...args) {
@@ -192,8 +207,11 @@ class Slot extends Stack {
 
   isLegalPush(card) {
     const targetValue = this.group.length
-      ? this.system.getWrapper(this.group.at(-1)).value
+      ? this.system.getCardWrapper(this.group.at(-1)).value
       : "00";
-    return checkFoundationLegality(card.value, targetValue);
+    if (checkFoundationLegality(card.value, targetValue)) {
+      this.suit = splitValue(card.value).suit;
+      return true;
+    }
   }
 }

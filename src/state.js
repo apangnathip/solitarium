@@ -1,5 +1,6 @@
 class StateMachine {
   constructor() {
+    this.id = null;
     this.state = new State();
     this.stateMap = {};
   }
@@ -13,6 +14,7 @@ class StateMachine {
     this.state.exit();
     this.state = this.stateMap[id];
     this.state.enter(...args);
+    this.id = id;
     return this;
   }
 
@@ -27,7 +29,6 @@ class StateMachine {
 }
 
 class State {
-  /** @param {StateMachine} fsm  */
   constructor(fsm) {
     this.fsm = fsm;
     this.onExit = () => {};

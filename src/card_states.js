@@ -1,5 +1,4 @@
 class CardState extends State {
-  /** @param {Card} card  */
   constructor(card) {
     super(card.fsm);
     this.card = card;
@@ -58,7 +57,11 @@ class IdleState extends CardState {
 class HoverState extends CardState {
   update() {
     if (!this.card.hovering()) return this.fsm.change("idle");
-    if (this.card.dragging()) return this.fsm.change("drag");
+
+    if (this.card.presses("left")) this.startDrag = true;
+    if (this.card.pressed("left")) this.startDrag = false;
+    if (this.startDrag && this.card.dragging()) return this.fsm.change("drag");
+
     if (this.card.stack.type !== "slot" && mouse.presses("right")) {
       return this.fsm.change("select");
     }
@@ -71,6 +74,7 @@ class HoverState extends CardState {
 
   enter() {
     this.startPos = { x: this.card.sprite.x, y: this.card.sprite.y };
+    this.startDrag = false;
   }
 
   exit() {
@@ -143,6 +147,7 @@ class DragState extends CardState {
   }
 
   enter() {
+    AssetLoader.sounds.tap.play();
     this.newStack = this.oldStack = this.card.stack;
     this.grabOffset = vecSub(this.card.getPos(), mouse);
     this.cards = this.card.splitStack();
@@ -160,7 +165,11 @@ class ResetState extends CardState {
   update() {
     this.card.moveTowards(this.endPos, 0.5);
     if (!this.card.moving()) {
-      this.fsm.change("idle");
+      if (this.system.isWinnable()) {
+        this.system.solve();
+      } else {
+        this.fsm.change("idle");
+      }
       return;
     }
   }
@@ -190,6 +199,7 @@ class FlipState extends CardState {
     if (this.card.sprite.scale.x < 0) {
       this.card.sprite.scale.x = 0;
       this.card.sprite.changeAni(this.up ? this.card.value : "back");
+      this.card.faceUp = this.up;
       this.speed *= -1;
     }
 
@@ -199,6 +209,8 @@ class FlipState extends CardState {
   }
 
   enter(flipTo = this.card.getPos(), flipFrom = this.card.getPos(), up = true) {
+    AssetLoader.sounds.flip.stop();
+    AssetLoader.sounds.flip.play();
     this.up = up;
     this.speed = 15;
     this.flipTo = flipTo;
@@ -219,8 +231,80 @@ class SelectState extends CardState {
   }
 
   enter() {
+    AssetLoader.sounds.tap.play();
     if (this.card.stack.getTopCard() === this.card) {
       this.foundation.add(this.card);
     }
+  }
+}
+
+class SolveState extends CardState {
+  update() {
+    this.t += deltaTime / 1000;
+    if (this.t < this.delay) return;
+
+    if (!this.soundPlayed) {
+      this.soundPlayed = true;
+      AssetLoader.sounds.flip.play();
+    }
+
+    this.card.sprite.layer = 1000 + this.delay;
+    this.card.moveTowards(this.endPos, 0.5);
+
+    if (!this.card.moving()) {
+      this.fsm.change("bounce", this.bounceDelay);
+      return;
+    }
+  }
+
+  enter(endPos, cardsAdded, cardsLeft) {
+    this.soundPlayed = false;
+    this.endPos = endPos;
+    this.delay = cardsAdded / 20;
+    this.bounceDelay = cardsLeft;
+    this.t = 0;
+  }
+
+  exit() {
+    super.exit();
+  }
+}
+
+class BounceState extends CardState {
+  update() {
+    if (this.card.system.foundation.cardCount < this.card.system.maxPoolCount) {
+      return;
+    }
+
+    this.t += deltaTime / 1000;
+    if (this.t < this.delay) return;
+
+    if (!this.posSet) {
+      AssetLoader.sounds.pop.play();
+      this.posSet = true;
+      this.card.setPos(this.card.getPos());
+      this.card.sprite.physics = "DYNAMIC";
+      world.gravity.y = 10;
+      this.card.sprite.direction = random(-180, 0);
+      this.card.sprite.speed = 2;
+    }
+
+    if (this.card.sprite.y + CARD_HH > canvas.h) {
+      this.card.sprite.y = canvas.h - CARD_HH;
+      this.card.sprite.vel.y *= -1 * 0.8;
+    }
+
+    const { x, y } = this.card.getPos();
+    trailBuffer.image(
+      AssetLoader.images.blank,
+      Math.floor(x - CARD_HW),
+      Math.floor(y - CARD_HH),
+    );
+  }
+
+  enter(delay) {
+    this.posSet = false;
+    this.delay = delay;
+    this.t = 0;
   }
 }

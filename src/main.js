@@ -1,19 +1,25 @@
 async function setup() {
-  await Canvas(350, 250);
+  await Canvas(270, 250);
   displayMode("center", "pixelated", 3);
 
-  await AssetLoader.loadImage("bg", "background.png");
+  trailBuffer = createGraphics(270, 250);
+  trailBuffer.clear();
+
+  await AssetLoader.loadImage("bg", "bordered_background.png");
   await AssetLoader.loadImage("borders", "borders.png");
   await AssetLoader.loadImage("redeal", "redeal.png");
+  await AssetLoader.loadImage("blank", "blank.png");
   await AssetLoader.loadSpritesheet("card", "cardsheet.png", "cardsheet.xml");
+
+  await AssetLoader.loadSound("tap", "card.mp3");
+  await AssetLoader.loadSound("flip", "flip.mp3", 0.5);
+  await AssetLoader.loadSound("pop", "pop.mp3", 0.5);
 
   allSprites.pixelPerfect = true;
   allSprites.physics = NONE;
   allSprites.autoDraw = false;
   allSprites.autoUpdate = false;
   world.autoStep = false;
-
-  drawBorders();
 
   new CardSystem();
   cardSystem.layTableau();
@@ -23,14 +29,10 @@ function update() {
   gameUpdate();
 }
 
-function drawFrame() {
+function draw() {
   background(AssetLoader.images.bg);
+  image(trailBuffer, 0, 0);
   allSprites.draw();
-}
-
-function drawBorders() {
-  const borders = new Sprite(AssetLoader.images.borders);
-  borders.layer = -1;
 }
 
 function gameUpdate() {

@@ -1,29 +1,8 @@
-// class AssetLoader {
-//   constructor() {
-//     this.images = {};
-//     this.spritesheets = {};
-//     this.baseUrl
-//   }
-//
-//   prefix(filename) {
-//     return "./assets/" + filename;
-//   }
-//
-//   static async loadImage(id, filename) {
-//     this.images[id] = loadImage(url);
-//   }
-//
-//   static async loadSpritesheet(id, imgName, xmlName) {
-//     const img = loadImage(imgUrl);
-//     const atlas = loadXML(xmlUrl);
-//     this.spritesheets[id] = [img, atlas];
-//   }
-// }
-
 const AssetLoader = {
   images: {},
   spritesheets: {},
   baseUrl: "./assets/",
+  sounds: {},
 
   prefix: function (filename) {
     return this.baseUrl + filename;
@@ -38,5 +17,10 @@ const AssetLoader = {
     const img = await loadImage(this.prefix(imgName));
     const xml = await loadXML(this.prefix(xmlName));
     this.spritesheets[id] = [img, parseTextureAtlas(xml)];
+  },
+
+  loadSound: async function (id, filename, vol = 1) {
+    this.sounds[id] = await loadSound(this.prefix(filename));
+    this.sounds[id].volume = vol;
   },
 };
