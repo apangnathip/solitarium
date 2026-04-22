@@ -9,6 +9,12 @@ class Foundation {
     this.inBounce = false;
   }
 
+  reset() {
+    this.cardCount = 0;
+    this.initCardCount = 0;
+    this.inBounce = false;
+  }
+
   setCardCountBeforeSolve() {
     this.initCardCount = this.cardCount;
   }

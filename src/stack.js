@@ -140,6 +140,10 @@ class Stock extends Stack {
     );
   }
 
+  reset() {
+    this.drawnSize = 0;
+  }
+
   newCard() {
     return new Card(this.system, this, this.x, this.y);
   }

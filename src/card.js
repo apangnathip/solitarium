@@ -14,9 +14,15 @@ class CardSystem {
     this.pt = this.pad + CARD_HH;
     this.solving = false;
     this.foundation = new Foundation(this);
-    this.stock;
     this.maxPoolCount = this.pool.length;
     this.restarting = false;
+
+    let stockPos = { x: this.mapStack(0), y: BOUNDS.nw.y + this.pt };
+    this.stock = new Stock(this, stockPos.x, stockPos.y, {
+      x: this.mapStack(1),
+      y: stockPos.y,
+    });
+    this.stock.autoFlip = false;
   }
 
   getRandomCardFromPool() {
@@ -33,14 +39,23 @@ class CardSystem {
 
   restart() {
     if (this.restarting) return;
+
     this.restarting = true;
+    this.solving = false;
+
     AssetLoader.sounds.pop.play();
+    trailBuffer.clear();
 
     for (const sprite of this.group) {
       const card = this.getCardWrapper(sprite);
       card.fsm.change("restart");
     }
+
     this.pool = createCardPool();
+    this.spriteToCard = {};
+    this.groupToStack = {};
+    this.stock.reset();
+    this.foundation.reset();
   }
 
   update() {
@@ -50,6 +65,7 @@ class CardSystem {
     for (const [_, stack] of Object.entries(this.groupToStack)) {
       stack.update();
     }
+    this.stock.update();
     if (kb.presses("space")) {
       this.restart();
     }
@@ -80,13 +96,6 @@ class CardSystem {
         cascade.newCard().fsm.change("init", delay);
       }
     }
-
-    let stockPos = { x: this.mapStack(0), y: BOUNDS.nw.y + this.pt };
-    this.stock = new Stock(this, stockPos.x, stockPos.y, {
-      x: this.mapStack(1),
-      y: stockPos.y,
-    });
-    this.stock.autoFlip = false;
 
     let i = 0;
     while (this.pool.length) {
