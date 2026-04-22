@@ -97,7 +97,6 @@ class DragState extends CardState {
   dragCards() {
     for (const [i, card] of this.cards.entries()) {
       if (card === this.card) {
-        console.log("test");
         card.moveTowards(vecSub(this.grabOffset, mouse), 1);
         continue;
       }
@@ -183,7 +182,6 @@ class ResetState extends CardState {
 class FollowState extends CardState {
   update() {
     this.card.moveTowards(vecSub(this.offset, mouse), 1 / (this.idx + 1));
-    console.log("hi");
   }
 
   enter(offset, idx) {
