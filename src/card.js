@@ -12,10 +12,8 @@ class CardSystem {
     this.pad = 5;
     this.pl = this.pad + CARD_HW;
     this.pt = this.pad + CARD_HH;
-    this.solving = false;
     this.foundation = new Foundation(this);
     this.maxPoolCount = this.pool.length;
-    this.restarting = false;
 
     let stockPos = { x: this.mapStack(0), y: BOUNDS.nw.y + this.pt };
     this.stock = new Stock(this, stockPos.x, stockPos.y, {
@@ -23,6 +21,10 @@ class CardSystem {
       y: stockPos.y,
     });
     this.stock.autoFlip = false;
+
+    this.restart();
+    this.restarting = false;
+    this.solving = false;
   }
 
   getRandomCardFromPool() {
