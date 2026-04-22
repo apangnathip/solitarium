@@ -13,6 +13,9 @@ class Foundation {
     this.cardCount = 0;
     this.initCardCount = 0;
     this.inBounce = false;
+    for (const slot of this.slots) {
+      slot.reset();
+    }
   }
 
   setCardCountBeforeSolve() {

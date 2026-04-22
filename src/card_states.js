@@ -89,7 +89,8 @@ class HoverState extends CardState {
 
 class DragState extends CardState {
   update() {
-    if (!mouse.pressing("left") || !this.card.dragging()) return this.changeStack();
+    if (!mouse.pressing("left") || !this.card.dragging())
+      return this.changeStack();
     this.detectStackHover();
     this.dragCards();
   }
@@ -114,9 +115,9 @@ class DragState extends CardState {
   detectStackHover() {
     let closest;
     let minDist;
+    const { x, y } = this.card.getPos();
     for (const key in this.system.groupToStack) {
       const stack = this.system.groupToStack[key];
-      const { x, y } = this.card.getPos();
       const d = dist(x, y, stack.x, stack.y);
       if (stack.overlapping(this.card.sprite) && (!minDist || d < minDist)) {
         if (stack.type === "slot" && this.cards.length > 1) continue;
@@ -280,11 +281,10 @@ class BounceState extends CardState {
     if (this.t < this.delay) return;
 
     if (!this.posSet) {
-      AssetLoader.sounds.pop.play();
       this.posSet = true;
-      this.card.setPos(this.card.getPos());
+      AssetLoader.sounds.pop.play();
+      this.card.setPos(this.initPos());
       this.card.sprite.physics = "DYNAMIC";
-      world.gravity.y = 10;
       this.card.sprite.direction = random(-180, 0);
       this.card.sprite.speed = 2;
     }
@@ -303,6 +303,7 @@ class BounceState extends CardState {
   }
 
   enter(delay) {
+    this.initPos = this.card.getPos();
     this.posSet = false;
     this.delay = delay;
     this.t = 0;
@@ -312,7 +313,6 @@ class BounceState extends CardState {
 class RestartState extends CardState {
   enter() {
     this.card.setPos(this.card.getPos());
-    world.gravity.y = 10;
     this.card.sprite.physics = "DYNAMIC";
     this.card.sprite.life = 60;
   }

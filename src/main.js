@@ -20,6 +20,7 @@ async function setup() {
   allSprites.physics = NONE;
   allSprites.autoDraw = false;
   allSprites.autoUpdate = false;
+  world.gravity.y = 10;
   world.autoStep = false;
 
   new CardSystem();

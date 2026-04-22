@@ -198,7 +198,13 @@ class Slot extends Stack {
     this.type = "slot";
     this.sprite = new Sprite(AssetLoader.images.slot, x, y);
     this.sprite.layer = 0;
-    this.suit;
+    this.suit = null;
+  }
+
+  reset() {
+    this.suit = null;
+    this.faceUpCount = 0;
+    this.system.groupToStack[this.group.idNum] = this;
   }
 
   overlapping(...args) {
