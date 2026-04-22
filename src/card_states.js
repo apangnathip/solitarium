@@ -283,7 +283,7 @@ class BounceState extends CardState {
     if (!this.posSet) {
       this.posSet = true;
       AssetLoader.sounds.pop.play();
-      this.card.setPos(this.initPos());
+      this.card.setPos(this.initPos);
       this.card.sprite.physics = "DYNAMIC";
       this.card.sprite.direction = random(-180, 0);
       this.card.sprite.speed = 2;
