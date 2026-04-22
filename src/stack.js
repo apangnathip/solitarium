@@ -192,7 +192,7 @@ class Slot extends Stack {
   constructor(system, x, y) {
     super(system, x, y);
     this.type = "slot";
-    this.sprite = new this.system.group.Sprite("blank", x, y);
+    this.sprite = new Sprite(AssetLoader.images.slot, x, y);
     this.sprite.layer = 0;
     this.suit;
   }

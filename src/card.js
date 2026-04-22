@@ -16,6 +16,7 @@ class CardSystem {
     this.foundation = new Foundation(this);
     this.stock;
     this.maxPoolCount = this.pool.length;
+    this.restarting = false;
   }
 
   getRandomCardFromPool() {
@@ -30,12 +31,31 @@ class CardSystem {
     return this.groupToStack[group.idNum];
   }
 
+  restart() {
+    if (this.restarting) return;
+    this.restarting = true;
+    AssetLoader.sounds.pop.play();
+
+    for (const sprite of this.group) {
+      const card = this.getCardWrapper(sprite);
+      card.fsm.change("restart");
+    }
+    this.pool = createCardPool();
+  }
+
   update() {
     for (const [_, card] of Object.entries(this.spriteToCard)) {
       card.update();
     }
     for (const [_, stack] of Object.entries(this.groupToStack)) {
       stack.update();
+    }
+    if (kb.presses("space")) {
+      this.restart();
+    }
+    if (this.restarting && !this.group.length) {
+      this.layTableau();
+      this.restarting = false;
     }
   }
 
@@ -129,6 +149,7 @@ class Card {
       .add("select", new SelectState(this))
       .add("solve", new SolveState(this))
       .add("bounce", new BounceState(this))
+      .add("restart", new RestartState(this))
       .add("empty", new CardState(this));
   }
 

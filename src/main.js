@@ -9,6 +9,7 @@ async function setup() {
   await AssetLoader.loadImage("borders", "borders.png");
   await AssetLoader.loadImage("redeal", "redeal.png");
   await AssetLoader.loadImage("blank", "blank.png");
+  await AssetLoader.loadImage("slot", "slot.png");
   await AssetLoader.loadSpritesheet("card", "cardsheet.png", "cardsheet.xml");
 
   await AssetLoader.loadSound("tap", "card.mp3");

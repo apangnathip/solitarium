@@ -308,3 +308,12 @@ class BounceState extends CardState {
     this.t = 0;
   }
 }
+
+class RestartState extends CardState {
+  enter() {
+    this.card.setPos(this.card.getPos());
+    world.gravity.y = 10;
+    this.card.sprite.physics = "DYNAMIC";
+    this.card.sprite.life = 60;
+  }
+}
