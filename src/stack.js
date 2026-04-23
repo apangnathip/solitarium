@@ -98,9 +98,9 @@ class Cascade extends Stack {
     this.backGap = 3;
   }
 
-  newCard() {
+  newCard(value = null) {
     const { x, y } = this.getTopPos();
-    return new Card(this.system, this, x, y);
+    return new Card(this.system, this, x, y, value);
   }
 
   isLegalPush(card) {
@@ -117,7 +117,7 @@ class Cascade extends Stack {
     };
   }
 
-  isDescAndOpen() {
+  isOpen() {
     for (const sprite of this.group) {
       const card = this.system.getCardWrapper(sprite);
       if (!card.faceUp) return false;

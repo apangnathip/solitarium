@@ -5,21 +5,15 @@ class Foundation {
     this.group.addAnis(...AssetLoader.spritesheets.card);
     this.slots = this.createSlots(4);
     this.cardCount = 0;
-    this.initCardCount = this.cardCount;
     this.inBounce = false;
   }
 
   reset() {
     this.cardCount = 0;
-    this.initCardCount = 0;
     this.inBounce = false;
     for (const slot of this.slots) {
       slot.reset();
     }
-  }
-
-  setCardCountBeforeSolve() {
-    this.initCardCount = this.cardCount;
   }
 
   createSlots(num) {
@@ -47,18 +41,49 @@ class Foundation {
     return false;
   }
 
-  autoAdd(card, i) {
+  getSlottedCards() {
+    const cards = [];
+    for (const slot of this.slots) {
+      for (const sprite of slot.group) {
+        cards.push(this.system.getCardWrapper(sprite));
+      }
+    }
+    return cards;
+  }
+
+  isInMovement() {
+    for (const slot of this.slots) {
+      if (slot.group.at(-1).isMoving) return true;
+    }
+    return false;
+  }
+
+  autoAdd(card) {
     for (const slot of this.slots) {
       if (!slot.isLegalPush(card)) continue;
       card.stack.popTo(card);
       card.stack = slot;
       slot.push(card);
-      const cardsLeft = this.system.maxPoolCount - this.initCardCount - i - 1;
-      card.fsm
-        .change("solve", card.stack.getTopPos(), i, cardsLeft)
-        .onExit(() => this.cardCount++);
       return true;
     }
     return false;
+  }
+
+  bounce(slotted, added) {
+    let i = 0;
+
+    for (const card of slotted) {
+      const cardsLeft = this.system.maxPoolCount - i - 1;
+      card.fsm.change("bounce", cardsLeft);
+      i++;
+    }
+
+    for (const card of added) {
+      const cardsLeft = this.system.maxPoolCount - i - 1;
+      card.fsm
+        .change("solve", card.stack.getTopPos(), i, cardsLeft)
+        .onExit(() => this.cardCount++);
+      i++;
+    }
   }
 }

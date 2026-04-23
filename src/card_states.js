@@ -253,7 +253,7 @@ class SolveState extends CardState {
     this.card.moveTowards(this.endPos, 0.5);
 
     if (!this.card.moving()) {
-      this.fsm.change("bounce", this.bounceDelay);
+      this.fsm.change("bounce", this.cardsLeft);
       return;
     }
   }
@@ -262,7 +262,7 @@ class SolveState extends CardState {
     this.soundPlayed = false;
     this.endPos = endPos;
     this.delay = cardsAdded / 20;
-    this.bounceDelay = cardsLeft;
+    this.cardsLeft = cardsLeft;
     this.t = 0;
   }
 
@@ -302,10 +302,10 @@ class BounceState extends CardState {
     );
   }
 
-  enter(delay) {
+  enter(cardsLeft) {
     this.initPos = this.card.getPos();
     this.posSet = false;
-    this.delay = delay;
+    this.delay = cardsLeft / 1.5;
     this.t = 0;
   }
 }

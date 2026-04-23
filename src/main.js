@@ -20,11 +20,11 @@ async function setup() {
   allSprites.physics = NONE;
   allSprites.autoDraw = false;
   allSprites.autoUpdate = false;
+  allSprites.autoCull = false;
   world.gravity.y = 10;
   world.autoStep = false;
 
   new CardSystem();
-  cardSystem.layTableau();
 }
 
 function update() {

@@ -23,8 +23,6 @@ class CardSystem {
     this.stock.autoFlip = false;
 
     this.restart();
-    this.restarting = false;
-    this.solving = false;
   }
 
   getRandomCardFromPool() {
@@ -109,39 +107,77 @@ class CardSystem {
     }
   }
 
+  // for debugging purposes
+  laySolvedTableau() {
+    const stacks = [
+      ["KD", "QC", "JD", "0C", "9H", "8C", "7D", "6S", "5H", "4S", "3D", "2S"],
+      ["KC", "QH", "JC", "0D", "9S", "8D", "7S", "6H", "5C", "4H", "3C", "2H"],
+      ["KH", "QS", "JH", "0S"],
+      ["KS", "QD", "JS", "0H", "9C", "8H", "7C", "6D", "5S"],
+      ["8S", "7H", "6C", "5D", "4C", "3H", "2C"],
+      ["9D"],
+      ["4D", "3S", "2D"],
+    ];
+
+    for (const [i, stack] of stacks.entries()) {
+      const cascade = new Cascade(
+        this,
+        this.mapStack(i),
+        BOUNDS.nw.y + this.pt + CARD_H + this.pad,
+      );
+      for (const value of stack) {
+        this.pool = this.pool.filter((v) => v !== value);
+        cascade.newCard(value).fsm.change("flip");
+      }
+    }
+
+    let i = 0;
+    while (this.pool.length) {
+      this.stock.newCard().fsm.change("init", 0.5 + i / 40, {
+        x: this.mapStack(1),
+        y: this.stock.y,
+      });
+      i++;
+    }
+  }
+
   isWinnable() {
     if (this.stock.group.length) return false;
     for (const [_, stack] of Object.entries(this.groupToStack)) {
       if (stack.type !== "cascade") continue;
-      if (!stack.isDescAndOpen()) return false;
+      if (!stack.isOpen()) return false;
     }
     return true;
   }
 
   solve() {
-    if (this.solving) return;
+    if (this.solving || this.foundation.isInMovement()) return;
     this.solving = true;
-    this.foundation.setCardCountBeforeSolve();
-    let added = 0;
+
+    const slottedCards = this.foundation.getSlottedCards();
+    const cardsToBounce = [];
     let i = 0;
-    while (added + this.foundation.cardCount < this.maxPoolCount) {
+
+    while (slottedCards.length + cardsToBounce.length < this.maxPoolCount) {
       if (i > 500) return console.error("fail to solve");
       for (const [_, stack] of Object.entries(this.groupToStack)) {
         if (stack.type !== "cascade") continue;
         const card = stack.getTopCard();
-        this.foundation.autoAdd(card, added) && added++;
+        if (this.foundation.autoAdd(card)) cardsToBounce.push(card);
         i++;
       }
     }
+
+    this.foundation.bounce(slottedCards, cardsToBounce);
   }
 }
 
 class Card {
-  constructor(system, stack, x, y, active = false) {
+  constructor(system, stack, x, y, value = null) {
     this.system = system;
     this.stack = stack;
-    this.active = active;
-    this.value = system.getRandomCardFromPool();
+    this.active = false;
+    this.value = value || system.getRandomCardFromPool();
     this.sprite = new stack.group.Sprite("back", x, y, DYNAMIC);
     this.faceUp = false;
     this.sprite.layer = stack.size();
